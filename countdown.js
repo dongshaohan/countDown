@@ -67,8 +67,10 @@
                 minute: true,
                 second: true
             },
-            fixNow: 3 * 1000,
-            fixNowDate: false,
+            fixServer: 3 * 1000,
+            fixServerDate: false, // 修正服务器时间开关 与 修正客户端时间开关 两者同时存在其一
+            fixNox: 10 * 1000,
+            fixNowDate: false, // 修正客户端时间开关
             now: new Date().valueOf(),
             render: function(outstring) {
                 console.log(outstring);
@@ -90,12 +92,19 @@
         constructor: countDown,
         init: function() {
             var self = this;
-            if (this.fixNowDate) {
-                var fix = new timer(this.fixNow);
+            if (this.fixServerDate) {
+                var fix = new timer(this.fixServer);
                 fix.add(function() {
-                    self.getNowTime(function(now) {
+                    self.getServerTimer(function(now) {
                         self.now = now;
                     });
+                });
+            } else if (this.fixNowDate) {
+                var fix = new timer(this.fixNox);
+                self.firstTime = self.now;
+                self.clientTime = new Date().getTime();
+                fix.add(function() {
+                    self.now = self.getNowTimer();
                 });
             }
             var index = msInterval.add(function() {
@@ -111,7 +120,7 @@
         getOutString: function() {
             return _formatTime(this.endTime, this.now, this.unit);
         },
-        getNowTime: function(cb) {
+        getServerTimer: function(cb) {
             var xhr = new XMLHttpRequest();
             xhr.open('get', '/', true);
             xhr.onreadystatechange = function() {
@@ -121,8 +130,11 @@
                 }
             };
             xhr.send(null);
+        },
+        getNowTimer: function () {
+            return this.firstTime + (new Date().getTime() - this.clientTime);
         }
-    };
+    };  
 
     function _cover(num) {
         var n = parseInt(num, 10);
