@@ -16,9 +16,9 @@ new countDown({
     endTime: Date.now() + 44 * 60 * 60 * 1000, // 结束时间 毫秒
     render: function (outstring) {
         console.log (outstring);
-        $('#hour').text( outstring.h );
-        $('#minute').text( outstring.m );
-        $('#second').text( outstring.s );
+        $('#hour').text( outstring.hour );
+        $('#minute').text( outstring.minute );
+        $('#second').text( outstring.second );
     },
     end: function () {
         console.log('the end!');
