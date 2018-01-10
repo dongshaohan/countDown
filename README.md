@@ -8,6 +8,7 @@ new countDown({
         minute: true,
         second: true
     }, // 日期开关
+    delayTime: 1000, // 倒计时间隔
     fixServer: 10 * 1000, // 同步服务器时间 默认每隔10s同步一次
     fixServerDate: false, // 同步服务器时间开关 与 修正客户端时间开关 两者同时存在其一
     fixNox: 10 * 1000, // 修正客户端时间 默认每隔10s同步一次
