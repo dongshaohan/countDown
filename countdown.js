@@ -64,7 +64,11 @@
                 minute: true,
                 second: true
             },
-            fixNow: 3 * 1000,
+            fixTimer: null,
+            fixNum: null,
+            msTimer: null,
+            msNum: null,
+            fixNow: 10 * 1000,
             fixNowDate: false,
             delayTime: 1000,
             now: new Date().valueOf(),
@@ -74,15 +78,14 @@
             end: function() {
                 console.log('the end!');
             },
-            endTime: new Date().valueOf() + 5 * 1000 * 60
+            endTime: new Date().valueOf() + 1 * 1000 * 60
         };
         for (var i in defaultOptions) {
             if (defaultOptions.hasOwnProperty(i)) {
                 this[i] = config[i] || defaultOptions[i];
             }
         }
-        this.index = null;
-        this.msInterval = new TimePool().getTimer(this.delayTime);
+        this.msTimer = new TimePool().getTimer(this.delayTime);
         this.init();
     };
 
@@ -91,18 +94,18 @@
         init: function() {
             var self = this;
             if (this.fixNowDate) {
-                var fix = new timer(this.fixNow);
-                fix.add(function() {
+                this.fixTimer = new timer(this.fixNow);
+                this.fixNum = this.fixTimer.add(function() {
                     self.getNowTime(function(now) {
                         self.now = now;
                     });
                 });
             }
-            this.index = self.msInterval.add(function() {
+            this.msNum = this.msTimer.add(function() {
                 self.now += self.delayTime;
                 if (self.now >= self.endTime) {
-                    self.msInterval.remove(self.index);
                     self.end();
+                    self.destroy();
                 } else {
                     self.render(self.getOutString());
                 }
@@ -123,7 +126,10 @@
             xhr.send(null);
         },
         destroy: function () {
-            this.msInterval.remove(this.index);
+            this.fixTimer && this.fixTimer.remove(this.fixNum);
+            this.msTimer.remove(this.msNum);
+            this.fixTimer = null;
+            this.msTimer = null;
         }
     };
 
