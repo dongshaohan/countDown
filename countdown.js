@@ -68,6 +68,7 @@
             fixNum: null,
             msTimer: null,
             msNum: null,
+            getNowTime: null,
             fixNow: 10 * 1000,
             fixNowDate: false,
             delayTime: 1000,
@@ -96,7 +97,7 @@
             if (this.fixNowDate) {
                 this.fixTimer = new timer(this.fixNow);
                 this.fixNum = this.fixTimer.add(function() {
-                    self.getNowTime(function(now) {
+                    self.getNowTime && self.getNowTime(function(now) {
                         self.now = now;
                     });
                 });
@@ -113,17 +114,6 @@
         },
         getOutString: function() {
             return _formatTime(this.endTime, this.now, this.unit);
-        },
-        getNowTime: function(cb) {
-            var xhr = new XMLHttpRequest();
-            xhr.open('get', '/', true);
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 3) {
-                    var now = xhr.getResponseHeader('Date');
-                    cb(new Date(now).valueOf());
-                }
-            };
-            xhr.send(null);
         },
         destroy: function () {
             this.fixTimer && this.fixTimer.remove(this.fixNum);
