@@ -2,14 +2,14 @@
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() : typeof define === 'function' && define.amd ? define(factory) : global.countDown = factory();
 })(this, function() {
 
-    function timer(delay) {
+    function Timer(delay) {
         this._queue = [];
         this.stop = false;
         this._createTimer(delay);
-    };
+    }
 
-    timer.prototype = {
-        constructor: timer,
+    Timer.prototype = {
+        constructor: Timer,
         _createTimer: function(delay) {
             var self = this;
             var first = true;
@@ -41,13 +41,13 @@
 
     function TimePool() {
         this._pool = {};
-    };
+    }
 
     TimePool.prototype = {
         constructor: TimePool,
         getTimer: function(delayTime) {
             var t = this._pool[delayTime];
-            return t ? t : (this._pool[delayTime] = new timer(delayTime));
+            return t ? t : (this._pool[delayTime] = new Timer(delayTime));
         },
         removeTimer: function(delayTime) {
             if (this._pool[delayTime]) {
@@ -64,13 +64,11 @@
                 minute: true,
                 second: true
             },
-            fixTimer: null,
-            fixNum: null,
-            msTimer: null,
-            msNum: null,
             getNowTime: null,
             fixNow: 10 * 1000,
             fixNowDate: false,
+            fixClient: 10 * 1000,
+            fixClientDate: false,
             delayTime: 1000,
             now: new Date().valueOf(),
             render: function(outstring) {
@@ -86,23 +84,35 @@
                 this[i] = config[i] || defaultOptions[i];
             }
         }
-        this.msTimer = new TimePool().getTimer(this.delayTime);
+        this._fixTimer = null;
+        this._fixNum = null;
+        this._fixClientTimer = null;
+        this._fixClientNum = null;
+        this._msNum = null;
+        this._msTimer = new TimePool().getTimer(this.delayTime);
         this.init();
-    };
+    }
 
     countDown.prototype = {
         constructor: countDown,
         init: function() {
             var self = this;
             if (this.fixNowDate) {
-                this.fixTimer = new timer(this.fixNow);
-                this.fixNum = this.fixTimer.add(function() {
+                this._fixTimer = new Timer(this.fixNow);
+                this._fixNum = this._fixTimer.add(function() {
                     self.getNowTime && self.getNowTime(function(now) {
                         self.now = now;
                     });
                 });
+            } else if (this.fixClientDate) {
+                this._fixClientTimer = new Timer(this.fixClient);
+                this.firstTime = this.now;
+                this.clientTime = new Date().getTime();
+                this._fixClientNum = this._fixClientTimer.add(function() {
+                    self.now = self.firstTime + (new Date().getTime() - self.clientTime);
+                });
             }
-            this.msNum = this.msTimer.add(function() {
+            this._msNum = this._msTimer.add(function() {
                 self.now += self.delayTime;
                 if (self.now >= self.endTime) {
                     self.end();
@@ -116,17 +126,19 @@
             return _formatTime(this.endTime, this.now, this.unit);
         },
         destroy: function () {
-            this.fixTimer && this.fixTimer.remove(this.fixNum);
-            this.msTimer.remove(this.msNum);
+            this.fixTimer && this.fixTimer.remove(this._fixNum);
+            this.fixClientTimer && this.fixClientTimer.remove(this._fixClientNum);
+            this._msTimer.remove(this._msNum);
             this.fixTimer = null;
-            this.msTimer = null;
+            this.fixClientTimer = null;
+            this._msTimer = null;
         }
     };
 
     function _cover(num) {
         var n = parseInt(num, 10);
         return n < 10 ? '0' + n : n;
-    };
+    }
 
     function _formatTime(eMs, sMs, unit) {
         var _result = {};
@@ -155,7 +167,7 @@
             hasGone += _result.second * timeMsMap.second;
         }
         return _result;
-    };
+    }
 
     return countDown;
 });
